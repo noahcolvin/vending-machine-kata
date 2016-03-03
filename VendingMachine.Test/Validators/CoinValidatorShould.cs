@@ -1,21 +1,31 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 using Rhino.Mocks;
+using VendingMachine.Helpers;
 using VendingMachine.Models;
-using VendingMachine.Validators;
 
 namespace VendingMachine.Test.Validators
 {
     [TestFixture]
     public class CoinValidatorShould
     {
+        private ICoin _coin;
+        private ICoinHelper _helper;
+
+        [SetUp]
+        public void Setup()
+        {
+            _coin = MockRepository.GenerateStub<ICoin>();
+            _helper = new CoinHelper();
+        }
+
         [Test]
         public void ReturnCoinAsValid()
         {
-            var coin = MockRepository.GenerateStub<ICoin>();
-
-            ICoinValidator validator = new CoinValidator();
-            var valid = validator.CoinValid(coin);
+            var valid = _helper.CoinValid(_coin);
 
             valid.Should().BeTrue();
         }
@@ -23,11 +33,9 @@ namespace VendingMachine.Test.Validators
         [Test]
         public void ReturnMediumCoinsAsInvalid()
         {
-            var coin = MockRepository.GenerateStub<ICoin>();
-            coin.Size = CoinSize.Medium;
-
-            ICoinValidator validator = new CoinValidator();
-            var valid = validator.CoinValid(coin);
+            _coin.Size = CoinSize.Medium;
+            
+            var valid = _helper.CoinValid(_coin);
 
             valid.Should().BeFalse();
         }
@@ -36,12 +44,10 @@ namespace VendingMachine.Test.Validators
         public void ReturnTenCentsForSmallCoin()
         {
             var expectedValue = 0.10M;
-
-            var coin = MockRepository.GenerateStub<ICoin>();
-            coin.Size = CoinSize.Small;
-
-            ICoinValidator validator = new CoinValidator();
-            var value = validator.CoinValue(coin);
+            
+            _coin.Size = CoinSize.Small;
+            
+            var value = _helper.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
         }
@@ -50,12 +56,10 @@ namespace VendingMachine.Test.Validators
         public void ReturnFiveCentsForLargeCoin()
         {
             var expectedValue = 0.05M;
-
-            var coin = MockRepository.GenerateStub<ICoin>();
-            coin.Size = CoinSize.Large;
-
-            ICoinValidator validator = new CoinValidator();
-            var value = validator.CoinValue(coin);
+            
+            _coin.Size = CoinSize.Large;
+            
+            var value = _helper.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
         }
@@ -64,12 +68,10 @@ namespace VendingMachine.Test.Validators
         public void ReturnTwentyFiveCentsForXlargeCoin()
         {
             var expectedValue = 0.25M;
-
-            var coin = MockRepository.GenerateStub<ICoin>();
-            coin.Size = CoinSize.XLarge;
-
-            ICoinValidator validator = new CoinValidator();
-            var value = validator.CoinValue(coin);
+            
+            _coin.Size = CoinSize.XLarge;
+            
+            var value = _helper.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
         }
@@ -78,14 +80,42 @@ namespace VendingMachine.Test.Validators
         public void ReturnZeroCentsForMediumCoin()
         {
             var expectedValue = decimal.Zero;
-
-            var coin = MockRepository.GenerateStub<ICoin>();
-            coin.Size = CoinSize.Medium;
-
-            ICoinValidator validator = new CoinValidator();
-            var value = validator.CoinValue(coin);
+            
+            _coin.Size = CoinSize.Medium;
+            
+            var value = _helper.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
+        }
+
+        [TestCase(typeof(Quarter), 0.25)]
+        [TestCase(typeof(Dime), 0.10)]
+        [TestCase(typeof(Nickel), 0.05)]
+        public void ReturnCorrectSingleCoin(Type type, decimal amount)
+        {
+            var actual = _helper.DistributeChange(amount).ToList();
+
+            actual.Count().Should().Be(1);
+            actual.First().Should().BeOfType(type);
+        }
+
+        [Test]
+        public void DistributeMultipleCoinsEfficently()
+        {
+            var expected = new List<ICoin>
+            {
+                new Quarter(),
+                new Quarter(),
+                new Quarter(),
+                new Dime(),
+                new Nickel()
+            };
+
+            var amount = 0.90M;
+
+            var change = _helper.DistributeChange(amount).ToList();
+
+            change.ShouldBeEquivalentTo(expected);
         }
     }
 }

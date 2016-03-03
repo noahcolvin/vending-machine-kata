@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
+using VendingMachine.Helpers;
 using VendingMachine.Models;
-using VendingMachine.Validators;
 
 namespace VendingMachine
 {
     public class Machine : IMachine
     {
-        private readonly ICoinValidator _coinValidator;
+        private readonly ICoinHelper _coinHelper;
         private decimal _currentInsertedValue;
         private const string DefaultDisplayValue = "INSERT COIN";
         private string _display = DefaultDisplayValue;
@@ -33,15 +33,15 @@ namespace VendingMachine
             }
         }
 
-        public Machine(ICoinValidator coinValidator)
+        public Machine(ICoinHelper coinHelper)
         {
-            _coinValidator = coinValidator;
+            _coinHelper = coinHelper;
         }
 
         public void InsertCoin(ICoin coin)
         {
-            if (_coinValidator.CoinValid(coin))
-                _currentInsertedValue += _coinValidator.CoinValue(coin);
+            if (_coinHelper.CoinValid(coin))
+                _currentInsertedValue += _coinHelper.CoinValueByWeight(coin);
             else
                 CoinReturn.Add(coin);
 
@@ -60,11 +60,17 @@ namespace VendingMachine
             if (_selectedProduct == null)
                 return;
 
-            if (_selectedProduct.Price == _currentInsertedValue)
+            if (_selectedProduct.Price <= _currentInsertedValue)
             {
                 DispensedProduct = _selectedProduct;
-                _currentInsertedValue = decimal.Zero;
+                _currentInsertedValue = _currentInsertedValue - _selectedProduct.Price;
                 Display = "THANK YOU";
+
+                if (_currentInsertedValue > 0)
+                {
+                    CoinReturn.AddRange(_coinHelper.DistributeChange(_currentInsertedValue));
+                    _currentInsertedValue = 0;
+                }
             }
             else
                 Display = $"PRICE {_selectedProduct.Price:C}";
