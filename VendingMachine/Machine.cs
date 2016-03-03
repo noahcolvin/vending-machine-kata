@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Castle.Components.DictionaryAdapter;
 using VendingMachine.Models;
 using VendingMachine.Validators;
 
@@ -9,20 +8,29 @@ namespace VendingMachine
     {
         private readonly ICoinValidator _coinValidator;
         private decimal _currentInsertedValue;
+        private const string DefaultDisplayValue = "INSERT COIN";
+        private string _display = DefaultDisplayValue;
+        private IProduct _selectedProduct;
 
-        public List<ICoin> CoinReturn { get; }= new List<ICoin>();
-        private string _display = "INSERT COIN";
+        public List<ICoin> CoinReturn { get; } = new List<ICoin>();
+        public IProduct DispensedProduct { get; private set; }
 
         public string Display
         {
             get
             {
-                if (_currentInsertedValue != 0)
+                if (_display == DefaultDisplayValue && _currentInsertedValue != 0)
                     return $"{_currentInsertedValue:C}";
 
-                return _display;
+                var currentValue = _display;
+                _display = DefaultDisplayValue;
+
+                return currentValue;
             }
-            set { _display = value; }
+            private set
+            {
+                _display = value;
+            }
         }
 
         public Machine(ICoinValidator coinValidator)
@@ -36,6 +44,30 @@ namespace VendingMachine
                 _currentInsertedValue += _coinValidator.CoinValue(coin);
             else
                 CoinReturn.Add(coin);
+
+            VerifyProductAmount();
+        }
+
+        public void SelectProduct(IProduct product)
+        {
+            _selectedProduct = product;
+
+            VerifyProductAmount();
+        }
+
+        private void VerifyProductAmount()
+        {
+            if (_selectedProduct == null)
+                return;
+
+            if (_selectedProduct.Price == _currentInsertedValue)
+            {
+                DispensedProduct = _selectedProduct;
+                _currentInsertedValue = decimal.Zero;
+                Display = "THANK YOU";
+            }
+            else
+                Display = $"PRICE {_selectedProduct.Price:C}";
         }
     }
 }

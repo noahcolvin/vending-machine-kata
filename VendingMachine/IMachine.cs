@@ -5,8 +5,10 @@ namespace VendingMachine
 {
     public interface IMachine
     {
-        string Display { get; set; }
+        string Display { get; }
         void InsertCoin(ICoin coin);
         List<ICoin> CoinReturn { get; }
+        void SelectProduct(IProduct product);
+        IProduct DispensedProduct { get; }
     }
 }

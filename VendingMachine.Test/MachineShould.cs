@@ -10,42 +10,45 @@ namespace VendingMachine.Test
     [TestFixture]
     public class MachineShould
     {
+        private IProduct _product;
+        private ICoin _coin;
+        private ICoinValidator _coinValidator;
+        private IMachine _machine;
+
+        [SetUp]
+        public void Setup()
+        {
+            _product = MockRepository.GenerateStub<IProduct>();
+            _coin = MockRepository.GenerateStub<ICoin>();
+            _coinValidator = MockRepository.GenerateStub<ICoinValidator>();
+
+            _machine = new Machine(_coinValidator);
+        }
+
         [Test]
         public void DefaultDisplayToInsertCoin()
         {
             var expected = "INSERT COIN";
 
-            IMachine machine = new Machine(null);
-
-            machine.Display.Should().Be(expected);
+            _machine.Display.Should().Be(expected);
         }
 
         [Test]
         public void ValidateCoin()
         {
-            var coinValidator = MockRepository.GenerateStub<ICoinValidator>();
-            var coin = MockRepository.GenerateStub<ICoin>();
+            _machine.InsertCoin(_coin);
 
-            IMachine machine = new Machine(coinValidator);
-
-            machine.InsertCoin(coin);
-
-            coinValidator.AssertWasCalled(c => c.CoinValid(coin));
+            _coinValidator.AssertWasCalled(c => c.CoinValid(_coin));
         }
 
         [Test]
         public void GetCoinValue()
         {
-            var coinValidator = MockRepository.GenerateStub<ICoinValidator>();
-            var coin = MockRepository.GenerateStub<ICoin>();
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
 
-            coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _machine.InsertCoin(_coin);
 
-            IMachine machine = new Machine(coinValidator);
-
-            machine.InsertCoin(coin);
-
-            coinValidator.AssertWasCalled(c => c.CoinValue(coin));
+            _coinValidator.AssertWasCalled(c => c.CoinValue(_coin));
         }
 
         [Test]
@@ -53,21 +56,16 @@ namespace VendingMachine.Test
         {
             var expected = "$0.90";
 
-            var coin = MockRepository.GenerateStub<ICoin>();
-            var coinValidator = MockRepository.GenerateStub<ICoinValidator>();
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
 
-            coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
-
-            coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M).Repeat.Times(3);
-            coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.10M).Repeat.Once();
-            coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.05M).Repeat.Once();
-
-            IMachine machine = new Machine(coinValidator);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M).Repeat.Times(3);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.10M).Repeat.Once();
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.05M).Repeat.Once();
 
             for (var i = 0; i < 5; i++)
-                machine.InsertCoin(coin);
+                _machine.InsertCoin(_coin);
 
-            machine.Display.Should().Be(expected);
+            _machine.Display.Should().Be(expected);
         }
 
         [Test]
@@ -75,21 +73,16 @@ namespace VendingMachine.Test
         {
             var expected = "$0.75";
 
-            var coin = MockRepository.GenerateStub<ICoin>();
-            var coinValidator = MockRepository.GenerateStub<ICoinValidator>();
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true).Repeat.Times(3);
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(false).Repeat.Once();
 
-            coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true).Repeat.Times(3);
-            coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(false).Repeat.Once();
-
-            coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M).Repeat.Times(3);
-            coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.01M).Repeat.Once();
-
-            IMachine machine = new Machine(coinValidator);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M).Repeat.Times(3);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.01M).Repeat.Once();
 
             for (var i = 0; i < 4; i++)
-                machine.InsertCoin(coin);
+                _machine.InsertCoin(_coin);
 
-            machine.Display.Should().Be(expected);
+            _machine.Display.Should().Be(expected);
         }
 
         [Test]
@@ -97,9 +90,7 @@ namespace VendingMachine.Test
         {
             var expected = new List<ICoin>();
 
-            IMachine machine = new Machine(null);
-
-            machine.CoinReturn.ShouldBeEquivalentTo(expected);
+            _machine.CoinReturn.ShouldBeEquivalentTo(expected);
         }
 
         [Test]
@@ -110,17 +101,126 @@ namespace VendingMachine.Test
 
             var expected = new List<ICoin> { badCoin };
 
-            var coinValidator = MockRepository.GenerateStub<ICoinValidator>();
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Matches(g => g == goodCoin))).Return(true);
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Matches(b => b == badCoin))).Return(false);
 
-            coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Matches(g => g == goodCoin))).Return(true);
-            coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Matches(b => b == badCoin))).Return(false);
+            _machine.InsertCoin(goodCoin);
+            _machine.InsertCoin(badCoin);
 
-            IMachine machine = new Machine(coinValidator);
+            _machine.CoinReturn.ShouldBeEquivalentTo(expected);
+        }
 
-            machine.InsertCoin(goodCoin);
-            machine.InsertCoin(badCoin);
+        [Test]
+        public void DefaultToNoDispensedProduct()
+        {
+            _machine.DispensedProduct.Should().BeNull();
+        }
 
-            machine.CoinReturn.ShouldBeEquivalentTo(expected);
+        [Test]
+        public void DispenseProductWhenSelectedAndEnoughMoneyInserted()
+        {
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M);
+
+            _product.Price = 0.25M;
+
+            _machine.InsertCoin(_coin);
+            _machine.SelectProduct(_product);
+
+            _machine.DispensedProduct.Should().Be(_product);
+        }
+
+        [Test]
+        public void DisplayThankYouMessageWhenProductDispensed()
+        {
+            var expected = "THANK YOU";
+
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M);
+
+            _product.Price = 0.25M;
+
+            _machine.InsertCoin(_coin);
+            _machine.SelectProduct(_product);
+
+            _machine.Display.Should().Be(expected);
+        }
+
+        [Test]
+        public void DisplayInsertCoinMessageAfterCheckingThankYouMessageWhenProductDispensed()
+        {
+            var expected = "INSERT COIN";
+
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M);
+
+            _product.Price = 0.25M;
+
+            _machine.InsertCoin(_coin);
+            _machine.SelectProduct(_product);
+
+            _machine.Display.Should().NotBe(expected);
+            _machine.Display.Should().Be(expected);
+        }
+
+        [Test]
+        public void DisplayPriceMessageWhenProductSelectedWithNotEnoughMoneyInserted()
+        {
+            var expected = "PRICE $0.50";
+
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M);
+
+            _product.Price = 0.50M;
+
+            _machine.InsertCoin(_coin);
+            _machine.SelectProduct(_product);
+
+            _machine.Display.Should().Be(expected);
+        }
+
+        [Test]
+        public void DisplayInsertCoinMessageAfterPriceMessageWhenProductSelectedWithNoMoneyInserted()
+        {
+            var expected = "INSERT COIN";
+
+            _product.Price = 0.50M;
+
+            _machine.SelectProduct(_product);
+
+            _machine.Display.Should().NotBe(expected);
+            _machine.Display.Should().Be(expected);
+        }
+
+        [Test]
+        public void DisplayCurrentAmountMessageAfterPriceMessageWhenProductSelectedWithNoMoneyInserted()
+        {
+            var expected = "$0.25";
+
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M);
+
+            _product.Price = 0.50M;
+
+            _machine.InsertCoin(_coin);
+            _machine.SelectProduct(_product);
+
+            _machine.Display.Should().NotBe(expected);
+            _machine.Display.Should().Be(expected);
+        }
+
+        [Test]
+        public void DispenseSelectedProductAfterAppropreateCoinsAdded()
+        {
+            _coinValidator.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _coinValidator.Stub(c => c.CoinValue(Arg<ICoin>.Is.Anything)).Return(0.25M);
+
+            _product.Price = 0.25M;
+
+            _machine.SelectProduct(_product);
+            _machine.InsertCoin(_coin);
+
+            _machine.DispensedProduct.Should().Be(_product);
         }
     }
 }

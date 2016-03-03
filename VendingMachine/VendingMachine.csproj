@@ -64,6 +64,7 @@
     <Compile Include="Models\CoinSize.cs" />
     <Compile Include="Models\Dime.cs" />
     <Compile Include="Models\ICoin.cs" />
+    <Compile Include="Models\IProduct.cs" />
     <Compile Include="Models\Nickel.cs" />
     <Compile Include="Models\Penny.cs" />
     <Compile Include="Models\Quarter.cs" />
