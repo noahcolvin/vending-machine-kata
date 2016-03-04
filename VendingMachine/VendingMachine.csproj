@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Console\ConsoleWriter.cs" />
     <Compile Include="Console\IConsoleWriter.cs" />
+    <Compile Include="Helpers\IProductHelper.cs" />
     <Compile Include="IMachine.cs" />
     <Compile Include="Installers\Installer.cs" />
     <Compile Include="Machine.cs" />

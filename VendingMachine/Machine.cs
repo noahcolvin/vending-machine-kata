@@ -8,6 +8,7 @@ namespace VendingMachine
     public class Machine : IMachine
     {
         private readonly ICoinHelper _coinHelper;
+        private readonly IProductHelper _productHelper;
         private const string DefaultDisplayValue = "INSERT COIN";
         private string _display = DefaultDisplayValue;
         private IProduct _selectedProduct;
@@ -39,9 +40,10 @@ namespace VendingMachine
             }
         }
 
-        public Machine(ICoinHelper coinHelper)
+        public Machine(ICoinHelper coinHelper, IProductHelper productHelper)
         {
             _coinHelper = coinHelper;
+            _productHelper = productHelper;
         }
 
         public void InsertCoin(ICoin coin)
@@ -59,6 +61,12 @@ namespace VendingMachine
 
         public void SelectProduct(IProduct product)
         {
+            if (!_productHelper.ProductAvailable(product))
+            {
+                Display = "SOLD OUT";
+                return;
+            }
+
             _selectedProduct = product;
 
             VerifyAndVendProduct();
