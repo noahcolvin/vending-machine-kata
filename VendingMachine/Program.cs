@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Castle.Windsor;
+﻿using Castle.Windsor;
 using Castle.Windsor.Installer;
 
 namespace VendingMachine
@@ -14,10 +9,11 @@ namespace VendingMachine
         {
             using (var container = new WindsorContainer().Install(FromAssembly.This()))
             {
+                //Resolve machine and implement human interface
                 var machine = container.Resolve<IMachine>();
                 while (true)
                 {
-                    //machine.Vend();
+                    //Console.WriteLine(machine.Display);
                 }
             }
         }
