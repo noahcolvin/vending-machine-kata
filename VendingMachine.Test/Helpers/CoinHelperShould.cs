@@ -7,10 +7,10 @@ using Rhino.Mocks;
 using VendingMachine.Helpers;
 using VendingMachine.Models;
 
-namespace VendingMachine.Test.Validators
+namespace VendingMachine.Test.Helpers
 {
     [TestFixture]
-    public class CoinValidatorShould
+    public class CoinHelperShould
     {
         private ICoin _coin;
         private ICoinHelper _helper;

@@ -58,7 +58,7 @@
   <ItemGroup>
     <Compile Include="MachineShould.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Validators\CoinValidatorShould.cs" />
+    <Compile Include="Helpers\CoinHelperShould.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

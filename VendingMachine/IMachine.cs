@@ -10,5 +10,6 @@ namespace VendingMachine
         List<ICoin> CoinReturn { get; }
         void SelectProduct(IProduct product);
         IProduct DispensedProduct { get; }
+        void ReturnCoins();
     }
 }

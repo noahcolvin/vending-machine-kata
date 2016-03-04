@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using VendingMachine.Helpers;
 using VendingMachine.Models;
 
@@ -7,10 +8,15 @@ namespace VendingMachine
     public class Machine : IMachine
     {
         private readonly ICoinHelper _coinHelper;
-        private decimal _currentInsertedValue;
         private const string DefaultDisplayValue = "INSERT COIN";
         private string _display = DefaultDisplayValue;
         private IProduct _selectedProduct;
+        private readonly List<ICoin> _insertedCoins = new List<ICoin>();
+
+        private decimal CurrentInsertedValue
+        {
+            get { return _insertedCoins.Sum(c => c.Value); }
+        }
 
         public List<ICoin> CoinReturn { get; } = new List<ICoin>();
         public IProduct DispensedProduct { get; private set; }
@@ -19,8 +25,8 @@ namespace VendingMachine
         {
             get
             {
-                if (_display == DefaultDisplayValue && _currentInsertedValue != 0)
-                    return $"{_currentInsertedValue:C}";
+                if (_display == DefaultDisplayValue && CurrentInsertedValue != 0)
+                    return $"{CurrentInsertedValue:C}";
 
                 var currentValue = _display;
                 _display = DefaultDisplayValue;
@@ -41,36 +47,44 @@ namespace VendingMachine
         public void InsertCoin(ICoin coin)
         {
             if (_coinHelper.CoinValid(coin))
-                _currentInsertedValue += _coinHelper.CoinValueByWeight(coin);
+            {
+                coin.Value = _coinHelper.CoinValueByWeight(coin);
+                _insertedCoins.Add(coin);
+            }
             else
                 CoinReturn.Add(coin);
 
-            VerifyProductAmount();
+            VerifyAndVendProduct();
         }
 
         public void SelectProduct(IProduct product)
         {
             _selectedProduct = product;
 
-            VerifyProductAmount();
+            VerifyAndVendProduct();
         }
 
-        private void VerifyProductAmount()
+        public void ReturnCoins()
+        {
+            CoinReturn.AddRange(_insertedCoins);
+            _insertedCoins.Clear();
+        }
+
+        private void VerifyAndVendProduct()
         {
             if (_selectedProduct == null)
                 return;
 
-            if (_selectedProduct.Price <= _currentInsertedValue)
+            if (_selectedProduct.Price <= CurrentInsertedValue)
             {
                 DispensedProduct = _selectedProduct;
-                _currentInsertedValue = _currentInsertedValue - _selectedProduct.Price;
                 Display = "THANK YOU";
 
-                if (_currentInsertedValue > 0)
-                {
-                    CoinReturn.AddRange(_coinHelper.DistributeChange(_currentInsertedValue));
-                    _currentInsertedValue = 0;
-                }
+                var remainingBalance = CurrentInsertedValue - _selectedProduct.Price;
+                _insertedCoins.Clear();
+
+                if (remainingBalance > 0)
+                    CoinReturn.AddRange(_coinHelper.DistributeChange(remainingBalance));
             }
             else
                 Display = $"PRICE {_selectedProduct.Price:C}";

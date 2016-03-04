@@ -56,14 +56,23 @@ namespace VendingMachine.Test
         {
             var expected = "$0.90";
 
+            var coin1 = MockRepository.GenerateStub<ICoin>();
+            var coin2 = MockRepository.GenerateStub<ICoin>();
+            var coin3 = MockRepository.GenerateStub<ICoin>();
+            var coin4 = MockRepository.GenerateStub<ICoin>();
+            var coin5 = MockRepository.GenerateStub<ICoin>();
+
             _coinHelper.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
 
             _coinHelper.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.25M).Repeat.Times(3);
             _coinHelper.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.10M).Repeat.Once();
             _coinHelper.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.05M).Repeat.Once();
 
-            for (var i = 0; i < 5; i++)
-                _machine.InsertCoin(_coin);
+            _machine.InsertCoin(coin1);
+            _machine.InsertCoin(coin2);
+            _machine.InsertCoin(coin3);
+            _machine.InsertCoin(coin4);
+            _machine.InsertCoin(coin5);
 
             _machine.Display.Should().Be(expected);
         }
@@ -73,14 +82,21 @@ namespace VendingMachine.Test
         {
             var expected = "$0.75";
 
+            var coin1 = MockRepository.GenerateStub<ICoin>();
+            var coin2 = MockRepository.GenerateStub<ICoin>();
+            var coin3 = MockRepository.GenerateStub<ICoin>();
+            var coin4 = MockRepository.GenerateStub<ICoin>();
+
             _coinHelper.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true).Repeat.Times(3);
             _coinHelper.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(false).Repeat.Once();
 
             _coinHelper.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.25M).Repeat.Times(3);
             _coinHelper.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.01M).Repeat.Once();
 
-            for (var i = 0; i < 4; i++)
-                _machine.InsertCoin(_coin);
+            _machine.InsertCoin(coin1);
+            _machine.InsertCoin(coin2);
+            _machine.InsertCoin(coin3);
+            _machine.InsertCoin(coin4);
 
             _machine.Display.Should().Be(expected);
         }
@@ -273,6 +289,27 @@ namespace VendingMachine.Test
 
             _machine.InsertCoin(_coin);
             _machine.SelectProduct(_product);
+
+            _machine.CoinReturn.ShouldBeEquivalentTo(expected);
+        }
+
+        [Test]
+        public void ReturnSameCoinsEntered()
+        {
+            var coin1 = MockRepository.GenerateStub<ICoin>();
+            var coin2 = MockRepository.GenerateStub<ICoin>();
+            var coin3 = MockRepository.GenerateStub<ICoin>();
+
+            _coinHelper.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
+            _coinHelper.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.05M);
+
+            var expected = new List<ICoin> { coin1, coin2, coin3 };
+
+            _machine.InsertCoin(coin1);
+            _machine.InsertCoin(coin2);
+            _machine.InsertCoin(coin3);
+
+            _machine.ReturnCoins();
 
             _machine.CoinReturn.ShouldBeEquivalentTo(expected);
         }
