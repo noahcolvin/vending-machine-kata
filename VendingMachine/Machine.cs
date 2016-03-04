@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using VendingMachine.Helpers;
+using VendingMachine.Managers;
 using VendingMachine.Models;
 
 namespace VendingMachine
 {
     public class Machine : IMachine
     {
-        private readonly ICoinHelper _coinHelper;
-        private readonly IProductHelper _productHelper;
-        private const string DefaultDisplayValue = "INSERT COIN";
-        private string _display = DefaultDisplayValue;
+        private readonly ICoinManager _coinManager;
+        private readonly IProductManager _productManager;
+        private readonly IBankManager _bankManager;
+        private string _display;
         private IProduct _selectedProduct;
         private readonly List<ICoin> _insertedCoins = new List<ICoin>();
+        private string DefaultDisplayValue => _bankManager.ChangeAvailable() ? "INSERT COIN" : "EXACT CHANGE ONLY";
 
         private decimal CurrentInsertedValue
         {
@@ -26,6 +27,8 @@ namespace VendingMachine
         {
             get
             {
+                _display = _display ?? DefaultDisplayValue;
+
                 if (_display == DefaultDisplayValue && CurrentInsertedValue != 0)
                     return $"{CurrentInsertedValue:C}";
 
@@ -40,17 +43,18 @@ namespace VendingMachine
             }
         }
 
-        public Machine(ICoinHelper coinHelper, IProductHelper productHelper)
+        public Machine(ICoinManager coinManager, IProductManager productManager, IBankManager bankManager)
         {
-            _coinHelper = coinHelper;
-            _productHelper = productHelper;
+            _coinManager = coinManager;
+            _productManager = productManager;
+            _bankManager = bankManager;
         }
 
         public void InsertCoin(ICoin coin)
         {
-            if (_coinHelper.CoinValid(coin))
+            if (_coinManager.CoinValid(coin))
             {
-                coin.Value = _coinHelper.CoinValueByWeight(coin);
+                coin.Value = _coinManager.CoinValueByWeight(coin);
                 _insertedCoins.Add(coin);
             }
             else
@@ -61,7 +65,7 @@ namespace VendingMachine
 
         public void SelectProduct(IProduct product)
         {
-            if (!_productHelper.ProductAvailable(product))
+            if (!_productManager.ProductAvailable(product))
             {
                 Display = "SOLD OUT";
                 return;
@@ -92,7 +96,7 @@ namespace VendingMachine
                 _insertedCoins.Clear();
 
                 if (remainingBalance > 0)
-                    CoinReturn.AddRange(_coinHelper.DistributeChange(remainingBalance));
+                    CoinReturn.AddRange(_coinManager.DistributeChange(remainingBalance));
             }
             else
                 Display = $"PRICE {_selectedProduct.Price:C}";

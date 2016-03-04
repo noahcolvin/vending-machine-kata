@@ -58,7 +58,8 @@
   <ItemGroup>
     <Compile Include="Console\ConsoleWriter.cs" />
     <Compile Include="Console\IConsoleWriter.cs" />
-    <Compile Include="Helpers\IProductHelper.cs" />
+    <Compile Include="Managers\IBankManager.cs" />
+    <Compile Include="Managers\IProductManager.cs" />
     <Compile Include="IMachine.cs" />
     <Compile Include="Installers\Installer.cs" />
     <Compile Include="Machine.cs" />
@@ -71,8 +72,8 @@
     <Compile Include="Models\Quarter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Helpers\CoinHelper.cs" />
-    <Compile Include="Helpers\ICoinHelper.cs" />
+    <Compile Include="Managers\CoinManager.cs" />
+    <Compile Include="Managers\ICoinManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

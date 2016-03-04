@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using VendingMachine.Models;
 
-namespace VendingMachine.Helpers
+namespace VendingMachine.Managers
 {
-    public interface ICoinHelper
+    public interface ICoinManager
     {
         bool CoinValid(ICoin coin);
         decimal CoinValueByWeight(ICoin coin);

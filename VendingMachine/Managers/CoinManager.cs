@@ -2,9 +2,9 @@
 using System.Linq;
 using VendingMachine.Models;
 
-namespace VendingMachine.Helpers
+namespace VendingMachine.Managers
 {
-    public class CoinHelper : ICoinHelper
+    public class CoinManager : ICoinManager
     {
         private readonly List<ICoin> _coins = new List<ICoin>
         {

@@ -4,7 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
 using Rhino.Mocks;
-using VendingMachine.Helpers;
+using VendingMachine.Managers;
 using VendingMachine.Models;
 
 namespace VendingMachine.Test.Helpers
@@ -13,19 +13,19 @@ namespace VendingMachine.Test.Helpers
     public class CoinHelperShould
     {
         private ICoin _coin;
-        private ICoinHelper _helper;
+        private ICoinManager _manager;
 
         [SetUp]
         public void Setup()
         {
             _coin = MockRepository.GenerateStub<ICoin>();
-            _helper = new CoinHelper();
+            _manager = new CoinManager();
         }
 
         [Test]
         public void ReturnCoinAsValid()
         {
-            var valid = _helper.CoinValid(_coin);
+            var valid = _manager.CoinValid(_coin);
 
             valid.Should().BeTrue();
         }
@@ -35,7 +35,7 @@ namespace VendingMachine.Test.Helpers
         {
             _coin.Size = CoinSize.Medium;
             
-            var valid = _helper.CoinValid(_coin);
+            var valid = _manager.CoinValid(_coin);
 
             valid.Should().BeFalse();
         }
@@ -47,7 +47,7 @@ namespace VendingMachine.Test.Helpers
             
             _coin.Size = CoinSize.Small;
             
-            var value = _helper.CoinValueByWeight(_coin);
+            var value = _manager.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
         }
@@ -59,7 +59,7 @@ namespace VendingMachine.Test.Helpers
             
             _coin.Size = CoinSize.Large;
             
-            var value = _helper.CoinValueByWeight(_coin);
+            var value = _manager.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
         }
@@ -71,7 +71,7 @@ namespace VendingMachine.Test.Helpers
             
             _coin.Size = CoinSize.XLarge;
             
-            var value = _helper.CoinValueByWeight(_coin);
+            var value = _manager.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
         }
@@ -83,7 +83,7 @@ namespace VendingMachine.Test.Helpers
             
             _coin.Size = CoinSize.Medium;
             
-            var value = _helper.CoinValueByWeight(_coin);
+            var value = _manager.CoinValueByWeight(_coin);
 
             value.Should().Be(expectedValue);
         }
@@ -93,7 +93,7 @@ namespace VendingMachine.Test.Helpers
         [TestCase(typeof(Nickel), 0.05)]
         public void ReturnCorrectSingleCoin(Type type, decimal amount)
         {
-            var actual = _helper.DistributeChange(amount).ToList();
+            var actual = _manager.DistributeChange(amount).ToList();
 
             actual.Count().Should().Be(1);
             actual.First().Should().BeOfType(type);
@@ -113,7 +113,7 @@ namespace VendingMachine.Test.Helpers
 
             var amount = 0.90M;
 
-            var change = _helper.DistributeChange(amount).ToList();
+            var change = _manager.DistributeChange(amount).ToList();
 
             change.ShouldBeEquivalentTo(expected);
         }

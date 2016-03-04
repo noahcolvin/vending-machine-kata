@@ -1,8 +1,8 @@
 ﻿using VendingMachine.Models;
 
-namespace VendingMachine.Helpers
+namespace VendingMachine.Managers
 {
-    public interface IProductHelper
+    public interface IProductManager
     {
         bool ProductAvailable(IProduct product);
     }
