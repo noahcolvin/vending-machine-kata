@@ -13,7 +13,7 @@ namespace VendingMachine
         private string _display;
         private IProduct _selectedProduct;
         private readonly List<ICoin> _insertedCoins = new List<ICoin>();
-        private string DefaultDisplayValue => _bankManager.ChangeAvailable() ? "INSERT COIN" : "EXACT CHANGE ONLY";
+        private string DefaultDisplayValue => CanMakeChange() ? "INSERT COIN" : "EXACT CHANGE ONLY";
 
         private decimal CurrentInsertedValue
         {
@@ -89,6 +89,9 @@ namespace VendingMachine
 
             if (_selectedProduct.Price <= CurrentInsertedValue)
             {
+                _productManager.RemoveProduct(_selectedProduct);
+                _bankManager.AddMoney(_selectedProduct.Price);
+
                 DispensedProduct = _selectedProduct;
                 Display = "THANK YOU";
 
@@ -97,9 +100,16 @@ namespace VendingMachine
 
                 if (remainingBalance > 0)
                     CoinReturn.AddRange(_coinManager.DistributeChange(remainingBalance));
+
+                
             }
             else
                 Display = $"PRICE {_selectedProduct.Price:C}";
+        }
+
+        private bool CanMakeChange()
+        {
+            return _productManager.Inventory.Where(p => p.Value > 0).Any(p => p.Key.Price < _bankManager.Amount);
         }
     }
 }

@@ -16,6 +16,7 @@ namespace VendingMachine.Test
         private IMachine _machine;
         private IProductManager _productManager;
         private IBankManager _bankManager;
+        private readonly decimal DefaultBank = 100M;
 
         [SetUp]
         public void Setup()
@@ -23,8 +24,13 @@ namespace VendingMachine.Test
             _product = MockRepository.GenerateStub<IProduct>();
             _coin = MockRepository.GenerateStub<ICoin>();
             _coinManager = MockRepository.GenerateStub<ICoinManager>();
+
             _productManager = MockRepository.GenerateStub<IProductManager>();
+            _productManager.Stub(p => p.Inventory).Return(new Dictionary<IProduct, int>());
+            _productManager.Inventory.Add(_product, 1);
+
             _bankManager = MockRepository.GenerateStub<IBankManager>();
+            _bankManager.Amount = DefaultBank;
 
             _machine = new Machine(_coinManager, _productManager, _bankManager);
         }
@@ -33,8 +39,6 @@ namespace VendingMachine.Test
         public void DefaultDisplayToInsertCoin()
         {
             var expected = "INSERT COIN";
-
-            _bankManager.Stub(b => b.ChangeAvailable()).Return(true);
 
             _machine.Display.Should().Be(expected);
         }
@@ -68,7 +72,6 @@ namespace VendingMachine.Test
             var coin4 = MockRepository.GenerateStub<ICoin>();
             var coin5 = MockRepository.GenerateStub<ICoin>();
 
-            _bankManager.Stub(b => b.ChangeAvailable()).Return(true);
             _coinManager.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
 
             _coinManager.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.25M).Repeat.Times(3);
@@ -94,7 +97,6 @@ namespace VendingMachine.Test
             var coin3 = MockRepository.GenerateStub<ICoin>();
             var coin4 = MockRepository.GenerateStub<ICoin>();
 
-            _bankManager.Stub(b => b.ChangeAvailable()).Return(true);
             _coinManager.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true).Repeat.Times(3);
             _coinManager.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(false).Repeat.Once();
 
@@ -177,7 +179,6 @@ namespace VendingMachine.Test
         {
             var expected = "INSERT COIN";
 
-            _bankManager.Stub(b => b.ChangeAvailable()).Return(true);
             _coinManager.Stub(c => c.CoinValid(Arg<ICoin>.Is.Anything)).Return(true);
             _coinManager.Stub(c => c.CoinValueByWeight(Arg<ICoin>.Is.Anything)).Return(0.25M);
             _productManager.Stub(p => p.ProductAvailable(Arg<IProduct>.Is.Anything)).Return(true);
@@ -212,8 +213,6 @@ namespace VendingMachine.Test
         public void DisplayInsertCoinMessageAfterPriceMessageWhenProductSelectedWithNoMoneyInserted()
         {
             var expected = "INSERT COIN";
-
-            _bankManager.Stub(b => b.ChangeAvailable()).Return(true);
 
             _product.Price = 0.50M;
 
@@ -349,7 +348,6 @@ namespace VendingMachine.Test
         {
             var expected = "INSERT COIN";
 
-            _bankManager.Stub(b => b.ChangeAvailable()).Return(true);
             _productManager.Stub(p => p.ProductAvailable(Arg<IProduct>.Is.Anything)).Return(false);
 
             _machine.SelectProduct(_product);
@@ -363,8 +361,10 @@ namespace VendingMachine.Test
         {
             var expected = "EXACT CHANGE ONLY";
 
-            _bankManager.Stub(b => b.ChangeAvailable()).Return(false);
-            
+            _product.Price = 0.5M;
+
+            _bankManager.Amount = 0M;
+
             _machine.Display.Should().Be(expected);
         }
     }

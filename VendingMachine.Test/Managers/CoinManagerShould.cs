@@ -7,10 +7,10 @@ using Rhino.Mocks;
 using VendingMachine.Managers;
 using VendingMachine.Models;
 
-namespace VendingMachine.Test.Helpers
+namespace VendingMachine.Test.Managers
 {
     [TestFixture]
-    public class CoinHelperShould
+    public class CoinManagerShould
     {
         private ICoin _coin;
         private ICoinManager _manager;
