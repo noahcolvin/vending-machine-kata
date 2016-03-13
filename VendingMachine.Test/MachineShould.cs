@@ -26,11 +26,10 @@ namespace VendingMachine.Test
             _coinManager = MockRepository.GenerateStub<ICoinManager>();
 
             _productManager = MockRepository.GenerateStub<IProductManager>();
-            _productManager.Stub(p => p.Inventory).Return(new Dictionary<IProduct, int>());
-            _productManager.Inventory.Add(_product, 1);
-
+            _productManager.Stub(p => p.Inventory).Return(new Dictionary<IProduct, int> { { _product, 1 } });
+            
             _bankManager = MockRepository.GenerateStub<IBankManager>();
-            _bankManager.Amount = DefaultBank;
+            _bankManager.Stub(a => a.Amount).Return(DefaultBank);
 
             _machine = new Machine(_coinManager, _productManager, _bankManager);
         }
@@ -39,7 +38,7 @@ namespace VendingMachine.Test
         public void DefaultDisplayToInsertCoin()
         {
             var expected = "INSERT COIN";
-
+            
             _machine.Display.Should().Be(expected);
         }
 
@@ -357,13 +356,11 @@ namespace VendingMachine.Test
         }
 
         [Test]
-        public void DisplayExactChangeOnlyWhenNoChangeAvailable()
+        public void DisplayExactChangeOnlyWhenNoChangeAvailableForProduct()
         {
             var expected = "EXACT CHANGE ONLY";
 
-            _product.Price = 0.5M;
-
-            _bankManager.Amount = 0M;
+            _product.Price = 500.5M;
 
             _machine.Display.Should().Be(expected);
         }

@@ -10,7 +10,9 @@ namespace VendingMachine.Installers
         public void Install(IWindsorContainer container, IConfigurationStore store)
         {
             container.Kernel.Register(Component.For<IMachine>().ImplementedBy<Machine>(),
-                Component.For<ICoinManager>().ImplementedBy<CoinManager>());
+                Component.For<ICoinManager>().ImplementedBy<CoinManager>(),
+                Component.For<IBankManager>().ImplementedBy<BankManager>(),
+                Component.For<IProductManager>().ImplementedBy<ProductManager>());
         }
     }
 }

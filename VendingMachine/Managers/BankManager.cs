@@ -12,21 +12,23 @@ namespace VendingMachine.Managers
             {
                 return _amount;
             }
-            set
+            private set
             {
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException("Cannot have negative amount");
-
-                _amount = value;
+                _amount = ValidateAmount(value);
             }
         }
 
         public void AddMoney(decimal amount)
         {
-            if (amount < 0)
-                throw new ArgumentOutOfRangeException("Cannot have negative amount");
+            Amount += ValidateAmount(amount);
+        }
 
-            Amount += amount;
+        private decimal ValidateAmount(decimal amount)
+        {
+            if (amount < 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+
+            return amount;
         }
     }
 }

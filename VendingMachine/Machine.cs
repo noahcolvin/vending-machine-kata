@@ -100,8 +100,6 @@ namespace VendingMachine
 
                 if (remainingBalance > 0)
                     CoinReturn.AddRange(_coinManager.DistributeChange(remainingBalance));
-
-                
             }
             else
                 Display = $"PRICE {_selectedProduct.Price:C}";

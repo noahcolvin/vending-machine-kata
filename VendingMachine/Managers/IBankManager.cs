@@ -2,7 +2,7 @@
 {
     public interface IBankManager
     {
-        decimal Amount { get; set; }
+        decimal Amount { get; }
         void AddMoney(decimal amount);
     }
 }

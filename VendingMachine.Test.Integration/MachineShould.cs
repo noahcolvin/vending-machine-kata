@@ -114,7 +114,7 @@ namespace VendingMachine.Test.Integration
         {
             var expected = "EXACT CHANGE ONLY";
             
-            _bankManager.Amount = 0.10M;
+            _bankManager.AddMoney(0.10M);
 
             var otherProduct = MockRepository.GenerateStub<IProduct>();
             otherProduct.Price = 0.25M;
